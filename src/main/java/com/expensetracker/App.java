@@ -22,6 +22,7 @@ public class App extends Application {
     private ObservableList<Expense> expenses = FXCollections.observableArrayList();
     private Label totalLabel = new Label("Total: P0.00");
     private PieChart pieChart = new PieChart();
+    private double budget = 0.0;
 
     @Override
     public void start(Stage stage) {
@@ -30,93 +31,111 @@ public class App extends Application {
         updateTotal();
         updateChart();
 
-        // --- HEADER ---
-        Label title = new Label("💰 Expense Tracker");
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 24));
-        title.setTextFill(Color.WHITE);
 
-        HBox header = new HBox(title);
-        header.setAlignment(Pos.CENTER_LEFT);
-        header.setPadding(new Insets(20, 30, 20, 30));
-        header.setStyle("-fx-background-color: #1e1e2e;");
+    // --- HEADER ---
+    Label title = new Label("💰 Expense Tracker");
+    title.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+    title.setTextFill(Color.WHITE);
 
-        // --- FORM FIELDS ---
-        TextField descriptionField = new TextField();
-        descriptionField.setPromptText("e.g. Lunch");
-        styleTextField(descriptionField);
+    Label budgetLabel = makeLabel("Monthly Budget (P):");
+    TextField budgetField = new TextField();
+    budgetField.setPromptText("e.g. 1000");
+    styleTextField(budgetField);
+    budgetField.setMaxWidth(120);
 
-        TextField amountField = new TextField();
-        amountField.setPromptText("e.g. 45.00");
-        styleTextField(amountField);
+    Button setBudgetButton = new Button("Set");
+    setBudgetButton.setStyle("-fx-background-color: #bd93f9; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 14; -fx-background-radius: 8; -fx-cursor: hand;");
+    setBudgetButton.setOnAction(e -> {
+        try {
+            budget = Double.parseDouble(budgetField.getText());
+            updateTotal();
+        } catch (NumberFormatException ex) {
+            showAlert("Please enter a valid budget amount.");
+        }
+    });
 
-        ComboBox<String> categoryBox = new ComboBox<>();
-        categoryBox.getItems().addAll("Food", "Transport", "Education", "Entertainment", "Other");
-        categoryBox.setPromptText("Select category");
-        categoryBox.setStyle("-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-border-color: #44475a; -fx-border-radius: 6; -fx-background-radius: 6;");
-        categoryBox.setMaxWidth(Double.MAX_VALUE);
+    HBox header = new HBox(20, title, budgetLabel, budgetField, setBudgetButton);
+    header.setAlignment(Pos.CENTER_LEFT);
+    header.setPadding(new Insets(20, 30, 20, 30));
+    header.setStyle("-fx-background-color: #1e1e2e;");
 
-        Button addButton = new Button("+ Add Expense");
-        addButton.setStyle("-fx-background-color: #6272a4; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
-        addButton.setMaxWidth(Double.MAX_VALUE);
+            // --- FORM FIELDS ---
+            TextField descriptionField = new TextField();
+            descriptionField.setPromptText("e.g. Lunch");
+            styleTextField(descriptionField);
 
-        // --- FORM LAYOUT ---
-        Label descLabel = makeLabel("Description");
-        Label amountLabel = makeLabel("Amount (P)");
-        Label catLabel = makeLabel("Category");
+            TextField amountField = new TextField();
+            amountField.setPromptText("e.g. 45.00");
+            styleTextField(amountField);
 
-        GridPane form = new GridPane();
-        form.setHgap(15);
-        form.setVgap(12);
-        form.setPadding(new Insets(25));
-        form.setStyle("-fx-background-color: #282a36; -fx-background-radius: 12;");
+            ComboBox<String> categoryBox = new ComboBox<>();
+            categoryBox.getItems().addAll("Food", "Transport", "Education", "Entertainment", "Other");
+            categoryBox.setPromptText("Select category");
+            categoryBox.setStyle("-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-border-color: #44475a; -fx-border-radius: 6; -fx-background-radius: 6;");
+            categoryBox.setMaxWidth(Double.MAX_VALUE);
 
-        form.add(descLabel, 0, 0);
-        form.add(descriptionField, 1, 0);
-        form.add(amountLabel, 0, 1);
-        form.add(amountField, 1, 1);
-        form.add(catLabel, 0, 2);
-        form.add(categoryBox, 1, 2);
-        form.add(addButton, 1, 3);
+            Button addButton = new Button("+ Add Expense");
+            addButton.setStyle("-fx-background-color: #6272a4; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
+            addButton.setMaxWidth(Double.MAX_VALUE);
 
-        ColumnConstraints col1 = new ColumnConstraints(110);
-        ColumnConstraints col2 = new ColumnConstraints();
-        col2.setHgrow(Priority.ALWAYS);
-        form.getColumnConstraints().addAll(col1, col2);
+            // --- FORM LAYOUT ---
+            Label descLabel = makeLabel("Description");
+            Label amountLabel = makeLabel("Amount (P)");
+            Label catLabel = makeLabel("Category");
 
-        // --- TABLE ---
-        TableView<Expense> table = new TableView<>();
-        table.setStyle("-fx-background-color: #282a36; -fx-text-fill: white;");
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            GridPane form = new GridPane();
+            form.setHgap(15);
+            form.setVgap(12);
+            form.setPadding(new Insets(25));
+            form.setStyle("-fx-background-color: #282a36; -fx-background-radius: 12;");
 
-        TableColumn<Expense, String> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
+            form.add(descLabel, 0, 0);
+            form.add(descriptionField, 1, 0);
+            form.add(amountLabel, 0, 1);
+            form.add(amountField, 1, 1);
+            form.add(catLabel, 0, 2);
+            form.add(categoryBox, 1, 2);
+            form.add(addButton, 1, 3);
 
-        TableColumn<Expense, String> descCol = new TableColumn<>("Description");
-        descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
+            ColumnConstraints col1 = new ColumnConstraints(110);
+            ColumnConstraints col2 = new ColumnConstraints();
+            col2.setHgrow(Priority.ALWAYS);
+            form.getColumnConstraints().addAll(col1, col2);
 
-        TableColumn<Expense, String> catCol = new TableColumn<>("Category");
-        catCol.setCellValueFactory(new PropertyValueFactory<>("category"));
+            // --- TABLE ---
+            TableView<Expense> table = new TableView<>();
+            table.setStyle("-fx-background-color: #282a36; -fx-text-fill: white;");
+            table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        TableColumn<Expense, Double> amountCol = new TableColumn<>("Amount (P)");
-        amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
+            TableColumn<Expense, String> dateCol = new TableColumn<>("Date");
+            dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
 
-        table.getColumns().addAll(dateCol, descCol, catCol, amountCol);
-        table.setItems(expenses);
+            TableColumn<Expense, String> descCol = new TableColumn<>("Description");
+            descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
 
-        // --- DELETE BUTTON ---
-        Button deleteButton = new Button("🗑 Delete Selected");
-        deleteButton.setStyle("-fx-background-color: #ff5555; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-radius: 8; -fx-cursor: hand;");
-        deleteButton.setOnAction(e -> {
-            Expense selected = table.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                expenses.remove(selected);
-                FileManager.saveExpenses(expenses);
-                updateTotal();
-                updateChart();
-            } else {
-                showAlert("Please select an expense to delete.");
-            }
-        });
+            TableColumn<Expense, String> catCol = new TableColumn<>("Category");
+            catCol.setCellValueFactory(new PropertyValueFactory<>("category"));
+
+            TableColumn<Expense, Double> amountCol = new TableColumn<>("Amount (P)");
+            amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
+
+            table.getColumns().addAll(dateCol, descCol, catCol, amountCol);
+            table.setItems(expenses);
+
+            // --- DELETE BUTTON ---
+            Button deleteButton = new Button("🗑 Delete Selected");
+            deleteButton.setStyle("-fx-background-color: #ff5555; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-radius: 8; -fx-cursor: hand;");
+            deleteButton.setOnAction(e -> {
+                Expense selected = table.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    expenses.remove(selected);
+                    FileManager.saveExpenses(expenses);
+                    updateTotal();
+                    updateChart();
+                } else {
+                    showAlert("Please select an expense to delete.");
+                }
+            });
 
         // --- TOTAL LABEL ---
         totalLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
@@ -220,7 +239,18 @@ public class App extends Application {
         for (Expense e : expenses) {
             total += e.getAmount();
         }
+
         totalLabel.setText(String.format("Total: P%.2f", total));
+
+        if (budget > 0 && total > budget) {
+            totalLabel.setTextFill(Color.web("#ff5555"));
+            totalLabel.setText(String.format("Total: P%.2f ⚠ Over budget by P%.2f!", total, total - budget));
+        } else if (budget > 0 && total >= budget * 0.9) {
+            totalLabel.setTextFill(Color.web("#ffb86c"));
+            totalLabel.setText(String.format("Total: P%.2f ⚠ Near budget limit!", total));
+        } else {
+            totalLabel.setTextFill(Color.web("#50fa7b"));
+        }
     }
 
     private void showAlert(String message) {
