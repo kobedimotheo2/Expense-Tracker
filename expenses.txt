@@ -1,0 +1,4 @@
+2026-05-13,savngs,Other,200.0
+2026-05-13,food sub,Food,650.0
+2026-05-13,tioletry,Other,200.0
+2026-05-13,kom,Entertainment,89.0
