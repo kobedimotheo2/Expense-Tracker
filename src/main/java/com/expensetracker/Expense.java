@@ -24,6 +24,9 @@ public class Expense {
     public LocalDate getDate() { return date; }
 
     public void setDate(LocalDate date) { this.date = date; }
+    public void setDescription(String description) { this.description = description; }
+    public void setAmount(double amount) { this.amount = amount; }
+    public void setCategory(String category) { this.category = category; }
 
     // This controls how an Expense looks when printed
     @Override
